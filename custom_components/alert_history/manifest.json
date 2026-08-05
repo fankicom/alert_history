@@ -1,7 +1,7 @@
 {
   "domain": "alert_history",
   "name": "Alert History",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "integration_type": "service",
   "documentation": "https://github.com/fankicom/alert_history",
   "issue_tracker": "https://github.com/fankicom/alert_history/issues",

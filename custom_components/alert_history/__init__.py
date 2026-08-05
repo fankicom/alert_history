@@ -44,6 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STARTUP_DELAY_SECONDS = 30
 ALERT2_REFRESH_DELAY_SECONDS = 0.5
+PERIODIC_UPDATE = 60
 
 
 async def async_update_view(hass: HomeAssistant) -> None:
@@ -71,6 +72,17 @@ async def async_reload_all(hass: HomeAssistant) -> None:
 
     await load_history(hass)
     await load_alert2_views(hass)
+
+
+async def async_reload_all_periodic(hass: HomeAssistant) -> None:
+    """Periodically reload all Alert History views every minute."""
+    await asyncio.sleep(PERIODIC_UPDATE)
+    while True:
+        try:
+            await async_reload_all(hass)
+        except Exception as e:
+            _LOGGER.error(f"Error during reload: {e}")
+        await asyncio.sleep(PERIODIC_UPDATE)
 
 
 def async_setup_alert2_listener(hass: HomeAssistant) -> None:
@@ -323,6 +335,9 @@ async def async_setup(
         async_startup_alert2_refresh(hass),
         "Alert History initial Alert2 refresh",
     )
+
+    # Starte den periodischen Reload
+    hass.async_create_task(async_reload_all_periodic(hass))
 
     _LOGGER.info("Alert History setup finished")
 
