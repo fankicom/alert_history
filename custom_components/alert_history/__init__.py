@@ -336,10 +336,31 @@ async def async_setup(
         "Alert History initial Alert2 refresh",
     )
 
-    # Starte den periodischen Reload
-    hass.async_create_task(async_reload_all_periodic(hass))
 
+    # Starte den periodischen Reload NACH dem Startup
+    @callback
+    def schedule_periodic_reload(_):
+        """Schedule periodic reload after startup."""
+        async def periodic_reload_task():
+            # Warte, bis HA wirklich läuft
+            while not hass.is_running:
+                await asyncio.sleep(1)
+            
+            _LOGGER.info("HA is running, starting periodic reload in 30 seconds")
+            await asyncio.sleep(30)
+            
+            # Jetzt erst den periodischen Task starten
+            _LOGGER.info("Starting periodic reload every %d seconds", PERIODIC_UPDATE)
+            hass.data[DOMAIN]["periodic_reload_task"] = hass.async_create_task(
+                async_reload_all_periodic(hass),
+                "Alert History periodic reload",
+            )
+        
+        hass.async_create_task(periodic_reload_task())
+    
+    # Registriere den Callback für den Startup
+    hass.bus.async_listen_once("homeassistant_started", schedule_periodic_reload)
+    
     _LOGGER.info("Alert History setup finished")
-
     return True
     
